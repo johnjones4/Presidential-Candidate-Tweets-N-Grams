@@ -60,10 +60,12 @@ exports.getNewTweets = function() {
       if (e) {
         console.log(e);
       } else {
+        console.log('Got tweets for ' + handle);
         var response = JSON.parse(data);
         if (response) {
-          if (response.max_id_str) {
-            database.updateMemberLastTweet(id,response.max_id_str,function(err) {
+          console.log(response);
+          if (response.search_metadata && response.search_metadata.max_id_str) {
+            database.updateMemberLastTweet(id,response.search_metadata.max_id_str,function(err) {
               console.log(err);
             });
           }
@@ -81,6 +83,7 @@ exports.getNewTweets = function() {
               });
             });
             for(var issue in issueCounts) {
+              console.log(handle + ' tweeted about ' + issue + ' ' + issueCounts[issue] + ' times.');
               database.createOfUpdateIssueCount(id,issue,issueCounts[issue],function(err) {
                 console.log(err);
               });
