@@ -6,8 +6,12 @@ const schema = 'CREATE TABLE IF NOT EXISTS `MemberTotals` (`id` INT UNSIGNED NOT
 var connection = mysql.createConnection(config.mysql);
 
 exports.connect = function(callback) {
-  connectio n.connect(function(err){
-    callback(err);
+  connection.connect(function(err){
+    if (err) {
+      callback(err);
+    } else {
+      exports.install(callback);
+    }
   });
 }
 
