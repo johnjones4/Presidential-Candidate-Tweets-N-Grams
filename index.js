@@ -5,7 +5,9 @@ database.connect(function(err) {
   if (!err) {
     twitter.getHandles(function(err) {
       if (!err) {
-        console.log('ready');
+        setInterval(function() {
+          twitter.getNewTweets();
+        },6000);
       } else {
         console.log(err);
       }
