@@ -63,7 +63,6 @@ exports.getNewTweets = function() {
         console.log('Got tweets for ' + handle);
         var response = JSON.parse(data);
         if (response) {
-          console.log(response);
           if (response.search_metadata && response.search_metadata.max_id_str) {
             database.updateMemberLastTweet(id,response.search_metadata.max_id_str,function(err) {
               console.log(err);
