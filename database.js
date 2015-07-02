@@ -1,22 +1,10 @@
 var mysql = require('mysql');
 var config = require('./config');
 
-const schema = 'CREATE TABLE IF NOT EXISTS `congtrack`.`Member` (   `ID` INT NOT NULL AUTO_INCREMENT,   `Handle` VARCHAR(5) NOT NULL,   `LastTweet` VARCHAR(45) NULL,   PRIMARY KEY (`ID`)) ENGINE = InnoDB;  CREATE TABLE IF NOT EXISTS `congtrack`.`MemberTotals` (   `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT,   `Member_ID` INT NOT NULL,   `Issue` VARCHAR(255) NOT NULL,   `Count` INT UNSIGNED NOT NULL DEFAULT 0,   PRIMARY KEY (`ID`, `Member_ID`),   UNIQUE INDEX `id_UNIQUE` (`ID` ASC),   INDEX `ISSUE` (`Issue` ASC),   INDEX `fk_MemberTotals_Member_idx` (`Member_ID` ASC),   CONSTRAINT `fk_MemberTotals_Member`     FOREIGN KEY (`Member_ID`)     REFERENCES `congtrack`.`Member` (`ID`)     ON DELETE NO ACTION     ON UPDATE NO ACTION) ENGINE = InnoDB;'
-
 var connection = mysql.createConnection(config.mysql);
 
 exports.connect = function(callback) {
-  connection.connect(function(err){
-    if (err) {
-      callback(err);
-    } else {
-      callback();
-    }
-  });
-}
-
-exports.install = function(callback) {
-  connection.query(schema,callback);
+  connection.connect(callback);
 }
 
 exports.getOrCreateMember = function(handle,callback) {
@@ -38,14 +26,24 @@ exports.getOrCreateMember = function(handle,callback) {
   });
 }
 
-exports.updateMemberLastTweet = function(id,max_id_str) {
+exports.updateMemberLastTweet = function(id,max_id_str,callback) {
   connection.query('UPDATE Member SET LastTweet=? WHERE ID=?', [max_id_str,id], function(err, result) {
     callback(err);
   });
 }
 
-exports.createOfUpdateIssueCount = function(id,issue,count,callback) { //function(err) {
-  connection.query('SELECT ID,Count FROM `MemberTotals` WHERE `Issue` = ? AND `Member_ID` = ?', [issue,id], function (error, results, fields) {
+exports.createOfUpdateIssueCount = function(id,issue,count,callback) {
+  var now = new Date();
+  var month = now.getMonth()+1;
+  if (month < 10) {
+    month = '0' + month;
+  }
+  var day = now.getDate();
+  if (day < 10) {
+    day = '0' + day;
+  }
+  var daystamp = now.getFullYear() + '' + month + '' + day;
+  connection.query('SELECT ID,Count FROM `MemberTotals` WHERE `Day` = ? AND `Issue` = ? AND `Member_ID` = ?', [daystamp,issue,id], function (error, results, fields) {
     if (error) {
       console.log(error);
       callback(err);
@@ -55,7 +53,7 @@ exports.createOfUpdateIssueCount = function(id,issue,count,callback) { //functio
         callback(err);
       });
     } else {
-      connection.query('INSERT INTO MemberTotals SET ?', {'Member_ID': id, 'Issue': issue, 'Count': count}, function(err, result) {
+      connection.query('INSERT INTO MemberTotals SET ?', {'Day': daystamp, 'Member_ID': id, 'Issue': issue, 'Count': count}, function(err, result) {
         if (err) {
           console.log(err);
         }
