@@ -71,7 +71,7 @@ exports.getNewTweets = function() {
             var issueCounts = {};
             var setsOfIssues = response.statuses.forEach(function(tweet) {
               issues.forEach(function(issue) {
-                if (tweet.toLowerCase().indexOf(issue.toLowerCase())) {
+                if (tweet.text.toLowerCase().indexOf(issue.toLowerCase())) {
                   if (issueCounts[issue]) {
                     issueCounts[issue]++;
                   } else {
