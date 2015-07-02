@@ -60,18 +60,19 @@ exports.getNewTweets = function() {
       if (e) {
         console.log(e);
       } else {
+        console.log('Got tweets for ' + handle);
         var response = JSON.parse(data);
         if (response) {
-          if (response.max_id_str) {
-            database.updateMemberLastTweet(id,response.max_id_str,function(err) {
-              console.log(err);
+          if (response.search_metadata && response.search_metadata.max_id_str) {
+            database.updateMemberLastTweet(id,response.search_metadata.max_id_str,function(err) {
+              if (err) console.log(err);
             });
           }
           if (response.statuses) {
             var issueCounts = {};
             var setsOfIssues = response.statuses.forEach(function(tweet) {
               issues.forEach(function(issue) {
-                if (tweet.text.toLowerCase().indexOf(issue.toLowerCase())) {
+                if (tweet.text.toLowerCase().indexOf(issue.toLowerCase()) >= 0) {
                   if (!issueCounts[issue]) {
                     issueCounts[issue] = 1;
                   }
@@ -79,8 +80,9 @@ exports.getNewTweets = function() {
               });
             });
             for(var issue in issueCounts) {
+              console.log(handle + ' tweeted about ' + issue + ' ' + issueCounts[issue] + ' times.');
               database.createOfUpdateIssueCount(id,issue,issueCounts[issue],function(err) {
-                console.log(err);
+                if (err) console.log(err);
               });
             }
           }
