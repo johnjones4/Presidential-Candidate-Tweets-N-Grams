@@ -42,7 +42,7 @@ exports.createOfUpdateIssueCount = function(id,issue,count,callback) {
   if (day < 10) {
     day = '0' + day;
   }
-  var daystamp = now.getFullYear() + '' + month + '' + day;
+  var daystamp = now.getFullYear() + '-' + month + '-' + day;
   connection.query('SELECT ID,Count FROM `MemberTotals` WHERE `Day` = ? AND `Issue` = ? AND `Member_ID` = ?', [daystamp,issue,id], function (error, results, fields) {
     if (error) {
       console.log(error);
