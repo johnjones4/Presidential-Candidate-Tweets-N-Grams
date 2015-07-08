@@ -75,6 +75,8 @@ exports.getNewTweets = function() {
                 if (tweet.text.toLowerCase().indexOf(issue.toLowerCase()) >= 0) {
                   if (!issueCounts[issue]) {
                     issueCounts[issue] = 1;
+                  } else {
+                    issueCounts[issue]++;
                   }
                 }
               });
