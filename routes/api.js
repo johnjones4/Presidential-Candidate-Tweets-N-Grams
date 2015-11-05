@@ -8,16 +8,19 @@ exports.getIssues = function(req,res,next) {
       database.getTallies(null,null,function(err,tallies) {
         callback(err,issues,tallies);
       });
-    }
-  ],function(err,issues,tallies) {
-    if (err) {
-      next(err);
-    } else {
+    },
+    function(issues,tallies,callback) {
       issues.forEach(function(issue) {
         issue.tallies = tallies.filter(function(tally) {
           return tally.Issue_ID = issue.ID;
         });
       });
+      callback(null,issues);
+    }
+  ],function(err,issues) {
+    if (err) {
+      next(err);
+    } else {
       res.send(issues);
     }
   });
@@ -30,16 +33,19 @@ exports.getMembers = function(req,res,next) {
       database.getTallies(null,null,function(err,tallies) {
         callback(err,members,tallies);
       });
-    }
-  ],function(err,members,tallies) {
-    if (err) {
-      next(err);
-    } else {
+    },
+    function(members,tallies,callback) {
       members.forEach(function(member) {
         member.tallies = tallies.filter(function(tally) {
           return tally.Member_ID = member.ID;
         });
       });
+      callback(null,members);
+    }
+  ],function(err,members) {
+    if (err) {
+      next(err);
+    } else {
       res.send(members);
     }
   });
@@ -86,6 +92,35 @@ exports.getCombinedTallies = function(req,res,next) {
         day += 86400000;
       }
       res.send(output);
+    }
+  });
+}
+
+exports.getCombinedMembers = function(req,res,next) {
+  async.waterfall([
+    database.getMembers,
+    function(members,callback) {
+      database.getCombinedMemberTallies(null,null,function(err,tallies) {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null,members,tallies)
+        }
+      })
+    },
+    function(members,tallies,callback) {
+      members.forEach(function(member) {
+        member.tallies = tallies.filter(function(tally) {
+          return tally.Member_ID == member.ID;
+        });
+      });
+      callback(null,members);
+    }
+  ],function(err,members) {
+    if (err) {
+      next(err);
+    } else {
+      res.send(members);
     }
   });
 }

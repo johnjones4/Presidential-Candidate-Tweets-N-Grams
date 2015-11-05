@@ -13,6 +13,7 @@ app.get('/api/issues',routes.api.getIssues);
 app.get('/api/tallies',routes.api.getTallies);
 app.get('/api/tallies/combined',routes.api.getCombinedTallies);
 app.get('/api/members',routes.api.getMembers);
+app.get('/api/members/combined',routes.api.getCombinedMembers);
 
 database.connect(function(err) {
   if (!err) {
