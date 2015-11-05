@@ -11,6 +11,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/api/issues',routes.api.getIssues);
 app.get('/api/tallies',routes.api.getTallies);
+app.get('/api/tallies/combined',routes.api.getCombinedTallies);
 app.get('/api/members',routes.api.getMembers);
 
 database.connect(function(err) {

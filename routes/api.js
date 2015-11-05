@@ -20,7 +20,7 @@ exports.getIssues = function(req,res,next) {
       });
       res.send(issues);
     }
-  })
+  });
 }
 
 exports.getMembers = function(req,res,next) {
@@ -42,7 +42,7 @@ exports.getMembers = function(req,res,next) {
       });
       res.send(members);
     }
-  })
+  });
 }
 
 exports.getTallies = function(req,res,next) {
@@ -51,6 +51,41 @@ exports.getTallies = function(req,res,next) {
       next(err);
     } else {
       res.send(tallies);
+    }
+  });
+}
+
+exports.getCombinedTallies = function(req,res,next) {
+  database.getCombinedTallies(null,null,function(err,tallies) {
+    if (err) {
+      next(err);
+    } else {
+      var minDate = Number.MAX_VALUE;
+      var maxDate = 0;
+      tallies.forEach(function(tally) {
+        var day = tally.Day.getTime();
+        if (day < minDate) {
+          minDate = day;
+        }
+        if (day > maxDate) {
+          maxDate = day;
+        }
+      });
+      var output = [];
+      var day = minDate;
+      while(day <= maxDate) {
+        var dateObj = new Date(day);
+        output.push({
+          'day': dateObj,
+          'tallies': tallies.filter(function(tally) {
+            return tally.Day.getFullYear() == dateObj.getFullYear() 
+                    && tally.Day.getMonth() == dateObj.getMonth() 
+                    && tally.Day.getDate() == dateObj.getDate();
+          })
+        });
+        day += 86400000;
+      }
+      res.send(output);
     }
   });
 }
