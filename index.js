@@ -3,6 +3,7 @@ var database = require('./lib/database');
 var express = require('express');
 var routes = require('./routes');
 var logger = require('morgan');
+var config = require('./config');
 
 database.connect(function(err) {
   if (!err) {
@@ -31,11 +32,8 @@ app.use(logger('combined'));
 app.use(express.static(__dirname + '/public'));
 
 app.get('/api/issues',routes.api.getIssues);
-app.get('/api/issue/:id',routes.api.getIssue);
 app.get('/api/tallies',routes.api.getTallies);
-app.get('/api/tally/:id',routes.api.getTally);
 app.get('/api/members',routes.api.getMembers);
-app.get('/api/member/:id',routes.api.getMmeber);
 
 app.listen(config.express.port,function() {
   console.log('Server running.');
