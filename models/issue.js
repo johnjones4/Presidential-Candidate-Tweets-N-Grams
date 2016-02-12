@@ -3,7 +3,12 @@ var async = require('async');
 var defaultIssues = require('../datasources/issues');
 
 var schema = new mongoose.Schema({
-  'name': String,
+  'name': {
+    'type': String,
+    'index': {
+      'unique': true
+    }
+  },
   'created': {
     'type': Date,
     'default': Date.now
