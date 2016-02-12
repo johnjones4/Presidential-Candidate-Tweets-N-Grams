@@ -1,7 +1,12 @@
 var mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
-  'twitterId': String,
+  'twitterId': {
+    'type': String,
+    'index': {
+      'unique': true
+    }
+  },
   'text': String,
   'member': {
     'type': mongoose.Schema.Types.ObjectId,

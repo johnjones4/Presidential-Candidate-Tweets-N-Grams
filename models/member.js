@@ -15,7 +15,7 @@ var schema = new mongoose.Schema({
   }
 });
 
-schema.statics.findOrCreateMember = function(handle,done) {
+schema.statics.findOrCreateMember = function(handle,name,done) {
   Member = mongoose.model('Member');
   Member.findOne({'handle': handle}, function(err,member) {
     if (err) {
@@ -24,7 +24,8 @@ schema.statics.findOrCreateMember = function(handle,done) {
       done(null,member);
     } else {
       var newMember = new Member({
-        'handle': handle
+        'handle': handle,
+        'name': name
       });
       newMember.save(function(err) {
         done(err,newMember);
