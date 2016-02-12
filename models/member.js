@@ -35,3 +35,16 @@ schema.statics.findOrCreateMember = function(handle,name,done) {
 }
 
 var Member = mongoose.model('Member',schema);
+
+exports.getForAPI = function(req,res,next,id) {
+  Member.findById(id,function(err,doc) {
+    if (err) {
+      next(err);
+    } else if (doc) {
+      req.member = doc;
+      next();
+    } else {
+      res.sendStatus(404);
+    }
+  });
+};

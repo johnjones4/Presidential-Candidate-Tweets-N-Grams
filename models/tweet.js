@@ -25,3 +25,16 @@ var schema = new mongoose.Schema({
 });
 
 var Tweet = mongoose.model('Tweet',schema);
+
+exports.getForAPI = function(req,res,next,id) {
+  Tweet.findById(id,function(err,doc) {
+    if (err) {
+      next(err);
+    } else if (doc) {
+      req.tweet = doc;
+      next();
+    } else {
+      res.sendStatus(404);
+    }
+  });
+};
