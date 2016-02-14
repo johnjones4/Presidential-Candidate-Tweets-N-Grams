@@ -16,7 +16,10 @@ app.use(bodyParser.json({}));
   app.param(param,models[param].getForAPI);
 })
 
-app.get('/api/issue/:issue/tallies',routes.api.issuesTally);
+app.get('/api/issue',routes.api.issues);
+app.get('/api/issue/:issue',routes.api.issue);
+app.get('/api/member',routes.api.members);
+app.get('/api/member/:member',routes.api.member);
 
 app.listen(config.express.port,function() {
   console.log('Server running.');

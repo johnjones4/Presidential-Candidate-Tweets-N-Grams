@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var tallyUtils = require('../lib/tallyUtils');
 
 var schema = new mongoose.Schema({
   'name': String,
@@ -32,6 +33,10 @@ schema.statics.findOrCreateMember = function(handle,name,done) {
       });
     }
   })
+}
+
+schema.methods.issuesTally = function(start,end,callback) {
+  tallyUtils.tally(start,end,{'member': this._id},callback);
 }
 
 var Member = mongoose.model('Member',schema);
