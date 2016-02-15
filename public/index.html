@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous" />
+	<link rel="stylesheet" href="/build/main.css" />
+	<title>Tweet Data</title>
+</head>
+<body>
+  <div id="main"></div>
+  <script type="text/template" id="home-template">
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Members</h2>
+        <ul>
+          <% _.each(members, function(member) { %>
+            <li><a href="#/member/<%= member._id %>"><%= member.name %></a></li>
+          <% }); %>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <h2>Issues</h2>
+        <ul>
+          <% _.each(issues, function(issue) { %>
+            <li><a href="#/issue/<%= issue._id %>"><%= issue.name %> (<%= issue.tally %> Tweets)</a></li>
+          <% }); %>
+        </ul>
+      </div>
+    </div>
+  </script>
+	<script type="text/template" id="issue-template">
+		<h2><%= issue.name %></h2>
+		<div class="row">
+      <div class="col-md-6">
+				<h3>Time Series</h3>
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Time</th>
+							<th>Tweets</th>
+						</tr>
+					</thead>
+					<tbody>
+						<% _.each(tallies, function(tally) { %>
+							<tr>
+								<td><%= tally.dateString %></td>
+								<td><%= tally.count %></td>
+							</tr>
+						<% }); %>
+					</tbody>
+				</table>
+			</div>
+			<div class="col-md-6">
+				<h3>Top Tweeters</h3>
+			</div>
+		</div>
+  </script>
+	<script type="text/template" id="member-template">
+		<h2><%= member.name %></h2>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Issue</th>
+					<th>Tweets</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% _.each(member.tallies, function(tally) { %>
+					<tr>
+						<td><%= tally.name %></td>
+						<td><%= tally.tally %></td>
+					</tr>
+				<% }); %>
+			</tbody>
+		</table>
+  </script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.0/backbone-min.js"></script>
+  <script src="/build/app.js"></script>
+</body>
+</html>

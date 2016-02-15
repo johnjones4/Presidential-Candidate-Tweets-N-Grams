@@ -9,6 +9,7 @@ var routes = require('./routes');
 mongoose.connect(config.mongo.connection_string);
 
 var app = express();
+app.use(express.static(__dirname + '/public'));
 app.use(logger('combined'));
 app.use(bodyParser.json({}));
 

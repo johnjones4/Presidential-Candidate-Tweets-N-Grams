@@ -5,8 +5,8 @@ var resolution = require('../lib/resolution');
 
 exports.issues = function(req,res,next) {
   if (req.query.start && req.query.end) {
-    var start = new Date(req.query.start);
-    var end = new Date(req.query.end);
+    var start = new Date(parseInt(req.query.start));
+    var end = new Date(parseInt(req.query.end));
     Issue.tally(start,end,function(err,issues) {
       if (err) {
         next(err);
@@ -29,8 +29,8 @@ exports.issues = function(req,res,next) {
 
 exports.issue = function(req,res,next) {
   if (req.query.start && req.query.end && req.query.resolution) {
-    var start = new Date(req.query.start);
-    var end = new Date(req.query.end);
+    var start = new Date(parseInt(req.query.start));
+    var end = new Date(parseInt(req.query.end));
     var reso = resolution.resolution[req.query.resolution];
     req.issue.timeSeriesTally(start,end,reso,function(err,tallies) {
       if (err) {
@@ -64,8 +64,8 @@ exports.members = function(req,res,next) {
 
 exports.member = function(req,res,next) {
   if (req.query.start && req.query.end) {
-    var start = new Date(req.query.start);
-    var end = new Date(req.query.end);
+    var start = new Date(parseInt(req.query.start));
+    var end = new Date(parseInt(req.query.end));
     req.member.issuesTally(start,end,function(err,tallies) {
       if (err) {
         next(err);
