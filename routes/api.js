@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var Issue = mongoose.model('Issue');
 var Member = mongoose.model('Member');
 var resolution = require('../lib/resolution');
+var async = require('async');
 
 exports.issues = function(req,res,next) {
   if (req.query.start && req.query.end) {
@@ -32,15 +33,24 @@ exports.issue = function(req,res,next) {
     var start = new Date(parseInt(req.query.start));
     var end = new Date(parseInt(req.query.end));
     var reso = resolution.resolution[req.query.resolution];
-    req.issue.timeSeriesTally(start,end,reso,function(err,tallies) {
+    async.parallel({
+      'timeSeries': function(done) {
+        req.issue.timeSeriesTally(start,end,reso,done);
+      },
+      'topTweeters': function(done) {
+        req.issue.topMembers(start,end,done);
+      }
+    },function(err,data) {
       if (err) {
         next(err);
       } else {
         var obj = req.issue.toObject();
-        obj.tallies = tallies;
+        obj.tallies = data.timeSeries;
+        obj.topTweeters = data.topTweeters;
         res.send(obj);
       }
-    });
+    })
+
   } else {
     var obj = req.issue.toObject();
     res.send(obj);

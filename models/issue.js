@@ -3,6 +3,7 @@ var async = require('async');
 var defaultIssues = require('../datasources/issues');
 var resolution = require('../lib/resolution.js');
 var tallyUtils = require('../lib/tallyUtils');
+var _ = require('lodash');
 
 var schema = new mongoose.Schema({
   'name': {
@@ -18,7 +19,7 @@ var schema = new mongoose.Schema({
 });
 
 schema.statics.initializeIssues = function(done) {
-  Issue = mongoose.model('Issue');
+  var Issue = mongoose.model('Issue');
   async.parallel(
     defaultIssues.map(function(issueName) {
       return function(next) {
@@ -49,8 +50,8 @@ schema.statics.tally = function(start,end,callback) {
 }
 
 schema.methods.timeSeriesTally = function(start,end,reso,callback) {
-  Tweet = mongoose.model('Tweet');
-  Issue = mongoose.model('Issue');
+  var Tweet = mongoose.model('Tweet');
+  var Issue = mongoose.model('Issue');
   var updatedStart = resolution.convertDateForResolution(start,reso);
   var updatedEnd = resolution.convertDateForResolution(end,reso);
   Tweet.collection.mapReduce(
@@ -108,6 +109,57 @@ schema.methods.timeSeriesTally = function(start,end,reso,callback) {
       }
     }
   );
+}
+
+schema.methods.topMembers = function(start,end,callback) {
+  var Tweet = mongoose.model('Tweet');
+  var Member = mongoose.model('Member');
+  var params = {
+    'created': {
+      '$gte': start,
+      '$lte': end
+    },
+    'issues': this._id
+  };
+  Tweet
+    .find(params)
+    .exec(function(err,tweets) {
+      if (err) {
+        callback(err);
+      } else {
+        var membersMap = {};
+        tweets.forEach(function(tweet) {
+          if (membersMap[tweet.member]) {
+            membersMap[tweet.member]++;
+          } else {
+            membersMap[tweet.member] = 1;
+          }
+        });
+        var memberIds = _.keys(membersMap);
+        async.parallel(
+          memberIds.map(function(member) {
+            return function(next) {
+              Member.findById(member,next);
+            }
+          }),
+          function(err,members) {
+            if (err) {
+              callback(err);
+            } else {
+              var membersAndCounts = members.map(function(member) {
+                var obj = member.toObject();
+                obj.tally = membersMap[member._id];
+                return obj;
+              });
+              membersAndCounts.sort(function(a,b) {
+                return b.tally - a.tally;
+              });
+              callback(null,membersAndCounts);
+            }
+          }
+        );
+      }
+    });
 }
 
 var Issue = mongoose.model('Issue',schema);

@@ -1,4 +1,6 @@
 var mongoose = require('mongoose');
+var _ = require('lodash');
+var async = require('async');
 var tallyUtils = require('../lib/tallyUtils');
 
 var schema = new mongoose.Schema({
@@ -17,7 +19,7 @@ var schema = new mongoose.Schema({
 });
 
 schema.statics.findOrCreateMember = function(handle,name,done) {
-  Member = mongoose.model('Member');
+  var Member = mongoose.model('Member');
   Member.findOne({'handle': handle}, function(err,member) {
     if (err) {
       done(err);
