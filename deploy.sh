@@ -1,4 +1,5 @@
 #!/bin/bash
+PATH=$PATH:/usr/local/bin
 git stash
 git pull
 git submodule foreach git pull origin master
