@@ -1,40 +1,171 @@
-var mongoose = require('mongoose');
+'use strict';
 
-var schema = new mongoose.Schema({
-  'twitterId': {
-    'type': String,
-    'index': {
-      'unique': true
-    }
-  },
-  'text': String,
-  'member': {
-    'type': mongoose.Schema.Types.ObjectId,
-    'ref': 'Member'
-  },
-  'issues': [
-    {
-      'type': mongoose.Schema.Types.ObjectId,
-      'ref': 'Issue'
-    }
-  ],
-  'created': {
-    'type': Date,
-    'default': Date.now
+var Model = require('./model');
+var NGram = require('./nGram');
+var async = require('async');
+
+class Tweet extends Model {
+  constructor() {
+    super();
+    this.twitterId = null;
+    this.text = null;
+    this.member = null;
+    this.tweetDate = null;
   }
-});
 
-var Tweet = mongoose.model('Tweet',schema);
+  save(done) {
+    var data = {
+      'twitterId': this.twitterId,
+      'text': this.text,
+      'member': this.member,
+      'tweetDate': this.tweetDate
+    };
+    var _this = this;
+    this._save(Tweet.knex('tweets'),data,function(err) {
+      if (err) {
+        done(err);
+      } else {
+        _this.saveNGrams(function(err) {
+          done(err,_this);
+        })
+      }
+    });
+  }
 
-exports.getForAPI = function(req,res,next,id) {
-  Tweet.findById(id,function(err,doc) {
-    if (err) {
-      next(err);
-    } else if (doc) {
-      req.tweet = doc;
-      next();
-    } else {
-      res.sendStatus(404);
+  findNGrams() {
+    var tokens = this.text.toLowerCase().split(' ');
+    var nGrams = [];
+    for(var N = 1; N < 5; N++) {
+      for(var k=0; k<(tokens.length-N+1); k++) {
+        var s = '';
+        var start = k;
+        var end = k + N;
+        for(var j=start; j<end; j++) {
+          s = s + ' ' + tokens[j];
+        }
+        nGrams.push(s.trim());
+      }
     }
-  });
+    this.nGrams = nGrams;
+  }
+
+  saveNGrams(done) {
+    var _this = this;
+    var map = {};
+    this.nGrams.forEach(function(nGram) {
+      if (!map[nGram]) {
+        map[nGram] = 0;
+      }
+      map[nGram]++;
+    });
+    var nGramArray = [];
+    for(var nGram in map) {
+      nGramArray.push({
+        'nGram': nGram,
+        'count': map[nGram]
+      });
+    }
+    async.series(
+      nGramArray.map(function(nGram) {
+        return function(next) {
+          NGram.findByNGram(nGram.nGram,function(err,nGramObject) {
+            next(err,{
+              'nGram': nGramObject,
+              'count': nGram.count
+            });
+          });
+        }
+      }),
+      function(err,nGramObjects) {
+        if (err) {
+          console.error(err);
+        } else {
+          async.parallel(
+            nGramObjects.map(function(nGramObject) {
+              return function(next) {
+                Tweet
+                  .knex('tweets_ngrams')
+                  .insert({
+                    'tweet': _this.id,
+                    'ngram': nGramObject.nGram.id,
+                    'count': nGramObject.count
+                  })
+                  .asCallback(next);
+              }
+            }),
+            done
+          )
+        }
+      }
+    );
+  }
+}
+
+Tweet.findByTwitterId = function(twitterId,done) {
+  Tweet.knex
+    .select('id','twitterId','text','member','created_at','updated_at','tweetDate')
+    .from('tweets')
+    .where({
+      'twitterId': twitterId
+    })
+    .asCallback(function(err,rows) {
+      if (err) {
+        done(err);
+      } else if (rows.length > 0) {
+        done(null,Tweet.generateObjects(rows)[0]);
+      } else {
+        done(null,null);
+      }
+    });
 };
+
+Tweet.generateObjects = function(rows) {
+  return rows.map(function(row) {
+    var tweet = new Tweet();
+    tweet.id = row.id;
+    tweet.twitterId = row.twitterId;
+    tweet.text = row.text;
+    tweet.member = row.member;
+    tweet.tweetDate = row.tweetDate;
+    tweet.created = row.created_at;
+    tweet.updated = row.updated_at;
+    return tweet;
+  })
+}
+
+Tweet.generateTable = function(done) {
+  async.series([
+    function(next) {
+      Tweet.knex.schema.hasTable('tweets').then(function(exists) {
+        if (!exists) {
+          Tweet.knex.schema.createTableIfNotExists('tweets', function (table) {
+            table.increments('id').primary();
+            table.string('twitterId').notNullable().unique();
+            table.string('text').notNullable();
+            table.integer('member').unsigned().notNullable().references('id').inTable('members');
+            table.date('tweetDate');
+            table.timestamps();
+            table.index(['twitterId']);
+          }).asCallback(next);
+        } else {
+          next();
+        }
+      });
+    },
+    function(next) {
+      Tweet.knex.schema.hasTable('tweets_ngrams').then(function(exists) {
+        if (!exists) {
+          Tweet.knex.schema.createTableIfNotExists('tweets_ngrams', function (table) {
+            table.integer('tweet').unsigned().notNullable().references('id').inTable('tweets');
+            table.integer('ngram').unsigned().notNullable().references('id').inTable('ngrams');
+            table.integer('count').unsigned().notNullable()
+          }).asCallback(next);
+        } else {
+          next();
+        }
+      });
+    }
+  ],done);
+}
+
+module.exports = Tweet;

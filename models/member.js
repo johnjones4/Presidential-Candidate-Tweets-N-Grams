@@ -1,57 +1,84 @@
-var mongoose = require('mongoose');
-var _ = require('lodash');
-var async = require('async');
-var tallyUtils = require('../lib/tallyUtils');
+'use strict';
 
-var schema = new mongoose.Schema({
-  'name': String,
-  'handle': {
-    'type': String,
-    'index': {
-      'unique': true
-    }
-  },
-  'lastTweet': String,
-  'created': {
-    'type': Date,
-    'default': Date.now
+var Model = require('./model');
+
+class Member extends Model {
+  constructor() {
+    super();
+    this.name = null;
+    this.handle = null;
+    this.lastTweet = null;
   }
-});
 
-schema.statics.findOrCreateMember = function(handle,name,done) {
-  var Member = mongoose.model('Member');
-  Member.findOne({'handle': handle}, function(err,member) {
-    if (err) {
-      done(err);
-    } else if (member) {
-      done(null,member);
+  save(done) {
+    var data = {
+      'name': this.name,
+      'handle': this.handle,
+      'lastTweet': this.lastTweet
+    };
+    this._save(Member.knex('members'),data,done);
+  }
+}
+
+Member.findByHandle = function(handle,done) {
+  Member.knex
+    .select('id','name','handle','lastTweet','created_at','updated_at')
+    .from('members')
+    .where({
+      'handle': handle
+    })
+    .asCallback(function(err,rows) {
+      if (err) {
+        done(err);
+      } else if (rows.length > 0) {
+        done(null,Member.generateObjects(rows)[0]);
+      } else {
+        done(null,null);
+      }
+    })
+};
+
+Member.findOrCreateMember = function(handle,name,done) {
+  Member.findByHandle(handle,function(err,member) {
+    if (err || member) {
+      done(err,member);
     } else {
-      var newMember = new Member({
-        'handle': handle,
-        'name': name
-      });
-      newMember.save(function(err) {
-        done(err,newMember);
-      });
+      member = new Member();
+      member.name = name;
+      member.handle = handle;
+      member.save(done);
     }
+  })
+};
+
+Member.generateObjects = function(rows) {
+  return rows.map(function(row) {
+    var member = new Member();
+    member.id = row.id;
+    member.name = row.name;
+    member.handle = row.handle;
+    member.lastTweet = row.lastTweet;
+    member.created = row.created_at;
+    member.updated = row.updated_at;
+    return member;
   })
 }
 
-schema.methods.issuesTally = function(start,end,callback) {
-  tallyUtils.tally(start,end,{'member': this._id},callback);
-}
-
-var Member = mongoose.model('Member',schema);
-
-exports.getForAPI = function(req,res,next,id) {
-  Member.findById(id,function(err,doc) {
-    if (err) {
-      next(err);
-    } else if (doc) {
-      req.member = doc;
-      next();
+Member.generateTable = function(done) {
+  Member.knex.schema.hasTable('members').then(function(exists) {
+    if (!exists) {
+      Member.knex.schema.createTableIfNotExists('members', function (table) {
+        table.increments('id').primary();
+        table.string('name').notNullable();
+        table.string('handle').notNullable().unique();
+        table.string('lastTweet');
+        table.timestamps();
+        table.index(['handle']);
+      }).asCallback(done);
     } else {
-      res.sendStatus(404);
+      done();
     }
   });
-};
+}
+
+module.exports = Member;

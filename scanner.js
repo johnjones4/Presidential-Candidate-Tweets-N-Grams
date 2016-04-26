@@ -1,17 +1,38 @@
 var config = require('./config');
-var models = require('./models');
-var mongoose = require('mongoose');
 var Twitter = require('./lib/twitter');
+var Member = require('./models/member');
+var Tweet = require('./models/tweet');
+var NGram = require('./models/nGram');
+var async = require('async');
 
-var Issue = mongoose.model('Issue');
+var knex = require('knex')({
+  'client': 'mysql',
+  'connection': {
+    'host': '127.0.0.1',
+    'user': 'root',
+    'database': 'tracker'
+  }
+});
 
-mongoose.connect(config.mongo.connection_string);
+Member.knex = knex;
+Tweet.knex = knex;
+NGram.knex = knex;
 
-Issue.initializeIssues(function(err,issues) {
+async.waterfall([
+  function(next) {
+    Member.generateTable(function(err) {next(err)});
+  },
+  function(next) {
+    NGram.generateTable(function(err) {next(err)});
+  },
+  function(next) {
+    Tweet.generateTable(function(err) {next(err)});
+  }
+],function(err) {
   if (err) {
     console.error(err);
   } else {
-    var twitter = new Twitter(config,issues);
+    var twitter = new Twitter(config);
     twitter.start();
   }
 });
