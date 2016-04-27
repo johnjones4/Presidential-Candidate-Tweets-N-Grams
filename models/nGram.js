@@ -1,27 +1,45 @@
 'use strict';
 
 var Model = require('./model');
+var commonWords = require('../commonWords');
 
 class NGram extends Model {
   constructor() {
     super();
     this.nGram = null;
+    this.count = 0;
   }
 
   save(done) {
     var data = {
-      'nGram': this.nGram
+      'ngram': this.nGram
     };
     this._save(NGram.knex('ngrams'),data,done);
   }
 }
 
+NGram.loadAll = function(done) {
+  NGram.knex
+    .select('id','ngram','updated_at','created_at',NGram.knex.raw('(select sum(count) from tweets_ngrams tn where tn.ngram = id) as count'))
+    .from('ngrams')
+    .whereNotIn('ngram',commonWords)
+    .orderBy('count','desc')
+    .orderBy('ngram','asc')
+    .asCallback(function(err,rows) {
+      if (err) {
+        done(err);
+      } else {
+        done(null,NGram.generateObjects(rows));
+      }
+    });
+}
+
 NGram.findByNGram = function(nGram,done) {
   NGram.knex
-    .select('id','nGram','updated_at','created_at')
+    .select('id','ngram','updated_at','created_at',NGram.knex.raw('(select sum(count) from tweets_ngrams tn where tn.ngram = id) as count'))
     .from('ngrams')
     .where({
-      'nGram': nGram
+      'ngram': nGram
     })
     .asCallback(function(err,rows) {
       if (err) {
@@ -40,9 +58,10 @@ NGram.generateObjects = function(rows) {
   return rows.map(function(row) {
     var ngram = new NGram();
     ngram.id = row.id;
-    ngram.nGram = row.nGram;
+    ngram.nGram = row.ngram;
     ngram.created = row.created_at;
     ngram.updated = row.updated_at;
+    ngram.count = row.count;
     return ngram;
   })
 }
@@ -52,9 +71,9 @@ NGram.generateTable = function(done) {
     if (!exists) {
       NGram.knex.schema.createTableIfNotExists('ngrams', function (table) {
         table.increments('id').primary();
-        table.string('nGram').notNullable().unique();
+        table.string('ngram').notNullable().unique();
         table.timestamps();
-        table.index(['nGram']);
+        table.index(['ngram']);
       }).asCallback(done);
     } else {
       done();

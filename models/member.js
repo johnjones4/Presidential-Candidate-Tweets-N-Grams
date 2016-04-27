@@ -18,7 +18,71 @@ class Member extends Model {
     };
     this._save(Member.knex('members'),data,done);
   }
+
+  loadNGrams(ngramIds,done) {
+    var _this = this;
+
+    var query = Member.knex
+      .select(['ngrams.ngram'])
+      .sum('tweets_ngrams.count as count')
+      .from('tweets_ngrams')
+      .innerJoin('ngrams','tweets_ngrams.ngram','ngrams.id')
+      .whereIn('tweet',function() {
+        this
+          .select('id')
+          .from('tweets')
+          .where({
+            'tweets.member': _this.id
+          });
+      })
+      .groupBy('tweets_ngrams.ngram')
+      .orderBy('count','desc')
+      .orderBy('ngram','asc');
+
+    if (ngramIds && ngramIds.length > 0) {
+      query.whereIn('tweets_ngrams.ngram',ngramIds)
+    }
+
+    query.asCallback(function(err,rows) {
+      if (err) {
+        done(err);
+      } else {
+        _this.ngrams = rows.map(function(row) {
+          return {
+            'nGram': row.ngram,
+            'count': row.count
+          }
+        });
+        done(null,_this);
+      }
+    });
+  }
 }
+
+Member._loadCallback = function(done) {
+  return function(err,rows) {
+    if (err) {
+      done(err);
+    } else if (rows.length > 0) {
+      done(null,Member.generateObjects(rows)[0]);
+    } else {
+      done(null,null);
+    }
+  }
+}
+
+Member.loadAll = function(done) {
+  Member.knex
+    .select('id','name','handle','lastTweet','created_at','updated_at')
+    .from('members')
+    .asCallback(function(err,rows) {
+      if (err) {
+        done(err);
+      } else {
+        done(null,Member.generateObjects(rows));
+      }
+    });
+};
 
 Member.findByHandle = function(handle,done) {
   Member.knex
@@ -27,15 +91,17 @@ Member.findByHandle = function(handle,done) {
     .where({
       'handle': handle
     })
-    .asCallback(function(err,rows) {
-      if (err) {
-        done(err);
-      } else if (rows.length > 0) {
-        done(null,Member.generateObjects(rows)[0]);
-      } else {
-        done(null,null);
-      }
+    .asCallback(Member._loadCallback(done));
+};
+
+Member.load = function(id,done) {
+  Member.knex
+    .select('id','name','handle','lastTweet','created_at','updated_at')
+    .from('members')
+    .where({
+      'id': id
     })
+    .asCallback(Member._loadCallback(done));
 };
 
 Member.findOrCreateMember = function(handle,name,done) {
