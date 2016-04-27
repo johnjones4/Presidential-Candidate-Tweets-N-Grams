@@ -9,7 +9,7 @@ class Tweet extends Model {
     super();
     this.twitterId = null;
     this.text = null;
-    this.member = null;
+    this.handle = null;
     this.tweetDate = null;
   }
 
@@ -17,7 +17,7 @@ class Tweet extends Model {
     var data = {
       'twitterId': this.twitterId,
       'text': this.text,
-      'member': this.member,
+      'handle': this.handle,
       'tweetDate': this.tweetDate
     };
     var _this = this;
@@ -105,7 +105,7 @@ class Tweet extends Model {
 
 Tweet.findByTwitterId = function(twitterId,done) {
   Tweet.knex
-    .select('id','twitterId','text','member','created_at','updated_at','tweetDate')
+    .select('id','twitterId','text','handle','created_at','updated_at','tweetDate')
     .from('tweets')
     .where({
       'twitterId': twitterId
@@ -127,7 +127,7 @@ Tweet.generateObjects = function(rows) {
     tweet.id = row.id;
     tweet.twitterId = row.twitterId;
     tweet.text = row.text;
-    tweet.member = row.member;
+    tweet.handle = row.handle;
     tweet.tweetDate = row.tweetDate;
     tweet.created = row.created_at;
     tweet.updated = row.updated_at;
@@ -144,7 +144,7 @@ Tweet.generateTable = function(done) {
             table.increments('id').primary();
             table.string('twitterId').notNullable().unique();
             table.string('text').notNullable();
-            table.integer('member').unsigned().notNullable().references('id').inTable('members');
+            table.integer('handle').unsigned().notNullable().references('id').inTable('handles');
             table.date('tweetDate');
             table.timestamps();
             table.index(['twitterId']);

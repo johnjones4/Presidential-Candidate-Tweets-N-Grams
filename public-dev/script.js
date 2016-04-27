@@ -2,7 +2,7 @@
 
 var ngrams = [];
 var currentNgrams = [];
-var members = [];
+var handles = [];
 var ngramsParam;
 var select;
 var xscale;
@@ -106,20 +106,20 @@ function transitionValues() {
     .text(function(d) { return d.count; });
 }
 
-function changeMember() {
+function changeHandle() {
   if (ngrams.length == 0) {
-    loadNgramsList(changeMember);
+    loadNgramsList(changeHandle);
   } else {
     var selectedIndex = select.property('selectedIndex');
     if (selectedIndex > 0) {
-      var member = members[selectedIndex];
-      var url = '/api/member/' + member.id + '?ngrams=' + encodeURIComponent(ngramsParam);
-      d3.json(url, function(error, member) {
+      var handle = handles[selectedIndex];
+      var url = '/api/handle/' + handle.id + '?ngrams=' + encodeURIComponent(ngramsParam);
+      d3.json(url, function(error, handle) {
         ngrams.forEach(function(ngram,i) {
-          var memberNGramMatches = member.ngrams.filter(function(_ngram) {
+          var handleNGramMatches = handle.ngrams.filter(function(_ngram) {
             return _ngram.nGram == ngram.nGram;
           });
-          currentNgrams[i].count = memberNGramMatches.length == 0 ? 0 : memberNGramMatches[0].count;
+          currentNgrams[i].count = handleNGramMatches.length == 0 ? 0 : handleNGramMatches[0].count;
         });
         transitionValues();
       });
@@ -132,27 +132,27 @@ function changeMember() {
   }
 }
 
-d3.json('/api/member', function(error, json) {
-  members = json;
+d3.json('/api/handle', function(error, json) {
+  handles = json;
 
   select = d3
     .select('#top')
     .append('select')
     .attr('class','form-control pull-left')
-    .on('change',changeMember);
+    .on('change',changeHandle);
 
-  members.unshift({
+  handles.unshift({
     'id': 0,
     'name': 'All'
   });
 
   var options = select
     .selectAll('option')
-    .data(members)
+    .data(handles)
     .enter()
     .append('option')
     .attr('value',function(d) { return d.id; })
     .text(function(d) { return d.name; });
 
-  changeMember();
+  changeHandle();
 });

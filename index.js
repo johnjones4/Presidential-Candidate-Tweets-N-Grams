@@ -1,5 +1,5 @@
 var config = require('./config');
-var Member = require('./models/member');
+var Handle = require('./models/handle');
 var Tweet = require('./models/tweet');
 var NGram = require('./models/nGram');
 var async = require('async');
@@ -12,7 +12,7 @@ var knex = require('knex')({
   'connection': config.mysql
 });
 
-Member.knex = knex;
+Handle.knex = knex;
 Tweet.knex = knex;
 NGram.knex = knex;
 
@@ -21,8 +21,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(logger('combined'));
 
 app.get('/api/ngram',routes.api.getNGrams);
-app.get('/api/member',routes.api.getMembers);
-app.get('/api/member/:id',routes.api.getMember);
+app.get('/api/handle',routes.api.getHandles);
+app.get('/api/handle/:id',routes.api.getHandle);
 
 app.listen(config.express.port,function() {
   console.log('Server running.');

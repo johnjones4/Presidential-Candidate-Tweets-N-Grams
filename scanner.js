@@ -1,6 +1,6 @@
 var config = require('./config');
 var Twitter = require('./lib/twitter');
-var Member = require('./models/member');
+var Handle = require('./models/handle');
 var Tweet = require('./models/tweet');
 var NGram = require('./models/nGram');
 var async = require('async');
@@ -10,13 +10,13 @@ var knex = require('knex')({
   'connection': config.mysql
 });
 
-Member.knex = knex;
+Handle.knex = knex;
 Tweet.knex = knex;
 NGram.knex = knex;
 
 async.waterfall([
   function(next) {
-    Member.generateTable(function(err) {next(err)});
+    Handle.generateTable(function(err) {next(err)});
   },
   function(next) {
     NGram.generateTable(function(err) {next(err)});

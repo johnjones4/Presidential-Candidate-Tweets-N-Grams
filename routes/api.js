@@ -1,4 +1,4 @@
-var Member = require('../models/member');
+var Handle = require('../models/handle');
 var Tweet = require('../models/tweet');
 var NGram = require('../models/nGram');
 var async = require('async');
@@ -13,30 +13,30 @@ exports.getNGrams = function(req,res,next) {
   })
 };
 
-exports.getMembers = function(req,res,next) {
-  Member.loadAll(function(err,members) {
+exports.getHandles = function(req,res,next) {
+  Handle.loadAll(function(err,handles) {
     if (err) {
       next(err);
     } else {
-      res.send(members);
+      res.send(handles);
     }
   });
 };
 
-exports.getMember = function(req,res,next) {
+exports.getHandle = function(req,res,next) {
   async.waterfall([
     function(next) {
-      Member.load(req.params.id,next);
+      Handle.load(req.params.id,next);
     },
-    function(member,next) {
+    function(handle,next) {
       var ngramIds = req.query.ngrams ? req.query.ngrams.split(',') : null;
-      member.loadNGrams(ngramIds,next);
+      handle.loadNGrams(ngramIds,next);
     }
-  ],function(err,member) {
+  ],function(err,handle) {
     if (err) {
       next(err);
     } else {
-      res.send(member);
+      res.send(handle);
     }
   });
 };

@@ -2,7 +2,7 @@
 
 var Model = require('./model');
 
-class Member extends Model {
+class Handle extends Model {
   constructor() {
     super();
     this.name = null;
@@ -16,13 +16,13 @@ class Member extends Model {
       'handle': this.handle,
       'lastTweet': this.lastTweet
     };
-    this._save(Member.knex('members'),data,done);
+    this._save(Handle.knex('handles'),data,done);
   }
 
   loadNGrams(ngramIds,done) {
     var _this = this;
 
-    var query = Member.knex
+    var query = Handle.knex
       .select(['ngrams.ngram'])
       .sum('tweets_ngrams.count as count')
       .from('tweets_ngrams')
@@ -32,7 +32,7 @@ class Member extends Model {
           .select('id')
           .from('tweets')
           .where({
-            'tweets.member': _this.id
+            'tweets.handle': _this.id
           });
       })
       .groupBy('tweets_ngrams.ngram')
@@ -59,81 +59,81 @@ class Member extends Model {
   }
 }
 
-Member._loadCallback = function(done) {
+Handle._loadCallback = function(done) {
   return function(err,rows) {
     if (err) {
       done(err);
     } else if (rows.length > 0) {
-      done(null,Member.generateObjects(rows)[0]);
+      done(null,Handle.generateObjects(rows)[0]);
     } else {
       done(null,null);
     }
   }
 }
 
-Member.loadAll = function(done) {
-  Member.knex
+Handle.loadAll = function(done) {
+  Handle.knex
     .select('id','name','handle','lastTweet','created_at','updated_at')
-    .from('members')
+    .from('handles')
     .asCallback(function(err,rows) {
       if (err) {
         done(err);
       } else {
-        done(null,Member.generateObjects(rows));
+        done(null,Handle.generateObjects(rows));
       }
     });
 };
 
-Member.findByHandle = function(handle,done) {
-  Member.knex
+Handle.findByHandle = function(handle,done) {
+  Handle.knex
     .select('id','name','handle','lastTweet','created_at','updated_at')
-    .from('members')
+    .from('handles')
     .where({
       'handle': handle
     })
-    .asCallback(Member._loadCallback(done));
+    .asCallback(Handle._loadCallback(done));
 };
 
-Member.load = function(id,done) {
-  Member.knex
+Handle.load = function(id,done) {
+  Handle.knex
     .select('id','name','handle','lastTweet','created_at','updated_at')
-    .from('members')
+    .from('handles')
     .where({
       'id': id
     })
-    .asCallback(Member._loadCallback(done));
+    .asCallback(Handle._loadCallback(done));
 };
 
-Member.findOrCreateMember = function(handle,name,done) {
-  Member.findByHandle(handle,function(err,member) {
-    if (err || member) {
-      done(err,member);
+Handle.findOrCreateHandle = function(_handle,name,done) {
+  Handle.findByHandle(_handle,function(err,handle) {
+    if (err || handle) {
+      done(err,handle);
     } else {
-      member = new Member();
-      member.name = name;
-      member.handle = handle;
-      member.save(done);
+      handle = new Handle();
+      handle.name = name;
+      handle.handle = _handle;
+      handle.save(done);
     }
   })
 };
 
-Member.generateObjects = function(rows) {
+Handle.generateObjects = function(rows) {
   return rows.map(function(row) {
-    var member = new Member();
-    member.id = row.id;
-    member.name = row.name;
-    member.handle = row.handle;
-    member.lastTweet = row.lastTweet;
-    member.created = row.created_at;
-    member.updated = row.updated_at;
-    return member;
+    var handle = new Handle();
+    handle.id = row.id;
+    handle.name = row.name;
+    handle.handle = row.handle;
+    handle.lastTweet = row.lastTweet;
+    handle.created = row.created_at;
+    handle.updated = row.updated_at;
+    return handle;
   })
 }
 
-Member.generateTable = function(done) {
-  Member.knex.schema.hasTable('members').then(function(exists) {
+Handle.generateTable = function(done) {
+  Handle.knex.schema.hasTable('handles').then(function(exists) {
     if (!exists) {
-      Member.knex.schema.createTableIfNotExists('members', function (table) {
+      Handle.knex.schema.createTableIfNotExists('handles', function (table) {
         table.increments('id').primary();
         table.string('name').notNullable();
         table.string('handle').notNullable().unique();
@@ -147,4 +147,4 @@ Member.generateTable = function(done) {
   });
 }
 
-module.exports = Member;
+module.exports = Handle;
