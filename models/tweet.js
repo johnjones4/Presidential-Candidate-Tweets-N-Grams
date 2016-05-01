@@ -16,7 +16,6 @@ class Tweet extends Model {
   save(done) {
     var data = {
       'twitterId': this.twitterId,
-      'text': this.text,
       'handle': this.handle,
       'tweetDate': this.tweetDate
     };
@@ -106,7 +105,7 @@ class Tweet extends Model {
 
 Tweet.findByTwitterId = function(twitterId,done) {
   Tweet.knex
-    .select('id','twitterId','text','handle','created_at','updated_at','tweetDate')
+    .select('id','twitterId','handle','created_at','updated_at','tweetDate')
     .from('tweets')
     .where({
       'twitterId': twitterId
@@ -127,7 +126,6 @@ Tweet.generateObjects = function(rows) {
     var tweet = new Tweet();
     tweet.id = row.id;
     tweet.twitterId = row.twitterId;
-    tweet.text = row.text;
     tweet.handle = row.handle;
     tweet.tweetDate = row.tweetDate;
     tweet.created = row.created_at;
@@ -144,7 +142,6 @@ Tweet.generateTable = function(done) {
           Tweet.knex.schema.createTableIfNotExists('tweets', function (table) {
             table.increments('id').primary();
             table.string('twitterId').notNullable().unique();
-            table.string('text').notNullable();
             table.integer('handle').unsigned().notNullable().references('id').inTable('handles');
             table.date('tweetDate');
             table.timestamps();
