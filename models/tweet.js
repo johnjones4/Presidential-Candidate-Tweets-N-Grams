@@ -43,8 +43,9 @@ class Tweet extends Model {
         for(var j=start; j<end; j++) {
           s = s + ' ' + tokens[j];
         }
-        if (s.trim().length > 0 && ['-','&amp;','https:/'].indexOf(s.trim()) < 0) {
-          nGrams.push(s.trim());
+        var cleaned = s.trim().replace(/\b[-.,()&$#!\[\]{}"']+\B|\B[-.,()&$#!\[\]{}"']+\b/g, "").trim();
+        if (cleaned.length > 0 && ['-','&amp;','https:/'].indexOf(cleaned) < 0) {
+          nGrams.push(cleaned);
         }
       }
     }
