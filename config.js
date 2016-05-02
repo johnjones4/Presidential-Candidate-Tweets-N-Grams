@@ -1,12 +1,14 @@
 {
   "mysql": {
-    "host": (process.env.MYSQL_HOST || "127.0.0.1"),
+    "host": (process.env.OPENSHIFT_MYSQL_DB_HOST || "127.0.0.1"),
+    "port": (process.env.OPENSHIFT_MYSQL_DB_PORT || 3306),
     "user": (process.env.MYSQL_USER || "root"),
     "password": (process.env.MYSQL_PASSWORD || ""),
-    "database": (process.env.MYSQL_PASSWORD || "tracker")
+    "database": (process.env.MYSQL_SCHEMA || "tracker")
   },
   "express": {
-    "port": (process.env.PORT || 8000)
+    "port": (process.env.NODE_PORT || 8000),
+    "host": (process.env.NODE_IP || "localhost")
   },
   "twitter": {
     "consumer_key": process.env.TWITTER_CONSUMER_KEY,
