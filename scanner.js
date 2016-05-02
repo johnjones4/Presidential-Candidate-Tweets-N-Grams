@@ -23,12 +23,14 @@ async.waterfall([
   },
   function(next) {
     Tweet.generateTable(function(err) {next(err)});
+  },
+  function(next) {
+    var twitter = new Twitter(config);
+    twitter.scan(next);
   }
 ],function(err) {
   if (err) {
     console.error(err);
-  } else {
-    var twitter = new Twitter(config);
-    twitter.start();
   }
+  process.exit(0);
 });
