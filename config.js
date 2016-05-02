@@ -1,4 +1,4 @@
-{
+module.exports = {
   "mysql": {
     "host": (process.env.OPENSHIFT_MYSQL_DB_HOST || "127.0.0.1"),
     "port": (process.env.OPENSHIFT_MYSQL_DB_PORT || 3306),
@@ -17,4 +17,4 @@
     "token_secret": process.env.TWITTER_TOKEN_SECRET
   },
   "logging": false
-}
+};
