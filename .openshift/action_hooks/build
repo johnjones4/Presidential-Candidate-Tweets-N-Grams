@@ -1,1 +1,1 @@
-node_modules/grunt-cli/bin/grunt dist
+cd "${OPENSHIFT_REPO_DIR}"; node_modules/grunt-cli/bin/grunt dist
