@@ -16,5 +16,5 @@ module.exports = {
     "token": process.env.TWITTER_TOKEN,
     "token_secret": process.env.TWITTER_TOKEN_SECRET
   },
-  "logging": false
+  "logging": false 
 };
