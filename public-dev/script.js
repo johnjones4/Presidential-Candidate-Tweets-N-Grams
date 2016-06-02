@@ -22,6 +22,7 @@ var margin = {top: 0, right: 100, bottom: 30, left: 175},
 
 function loadNgramsList(done) {
   d3.json('/api/ngram', function(error, json) {
+    d3.select('#spinner').remove();
     ngrams = json.slice(0,50);
     currentNgrams = ngrams.map(function(ngram) {
       return {'count': ngram.count };
